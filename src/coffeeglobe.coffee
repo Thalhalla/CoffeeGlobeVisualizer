@@ -14,7 +14,22 @@
     sun = new Sun()
     sun.init()
     this.addObject(sun)
+    # Are the stars out tonight...?
+    stars = new Stars()
 
+    # Push the stars out past Pluto
+    stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+    @addObject stars
+
+EarthApp.SIZE_IN_EARTHS = 10;
+EarthApp.MOUSE_MOVE_TOLERANCE = 4;
+EarthApp.MAX_ROTATION_X = Math.PI / 2;
+EarthApp.MAX_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 50;
+EarthApp.MIN_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 3;
+EarthApp.EARTH_DISTANCE = 50;
+EarthApp.PLUTO_DISTANCE_IN_EARTHS = 77.2;
+EarthApp.EARTH_DISTANCE_SQUARED = 45000;
+EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 #Custom Earth class
 @Earth = -> Sim.Object.call(this)
 
