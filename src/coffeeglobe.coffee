@@ -2,7 +2,7 @@
 EarthApp = ->
     Sim.App.call(this)
 #Subclass Sim.App
-EarthApp:: =  new Sim.app()
+EarthApp:: =  new Sim.App()
 #Our Custom Initializer
 EarthApp::init = (param) ->
     #Call Superclass init code to set up scene, renderer, and default camera
