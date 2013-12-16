@@ -15,11 +15,11 @@
     sun.init()
     this.addObject(sun)
     # Are the stars out tonight...?
-    #stars = new Stars()
+    stars = new Stars()
 
     # Push the stars out past Pluto
-    #stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
-    #@addObject stars
+    stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+    @addObject stars
 
     # Are the spikes out tonight...?
     spikes = new Spikes()
