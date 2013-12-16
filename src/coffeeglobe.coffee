@@ -89,11 +89,7 @@ EarthApp.EARTH_DISTANCE = 50;
 EarthApp.PLUTO_DISTANCE_IN_EARTHS = 77.2;
 EarthApp.EARTH_DISTANCE_SQUARED = 45000;
 EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
-#@EarthApp::colorFn = (x) ->
-    #color = new THREE.Color()
-    #console.log(JSON.stringify(color))
-    #color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    #color
+
 #Custom Earth class
 @Earth = -> Sim.Object.call(this)
 
@@ -106,6 +102,12 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
     #Add earth and clouds
     this.createGlobe()
     this.createClouds()
+
+@Earth::colorFn = (x) ->
+    color = new THREE.Color()
+    console.log(JSON.stringify(color))
+    color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
+    color
 
 @Earth::createGlobe = ->
     #Create our earth with nice texture
@@ -156,12 +158,12 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
   i = undefined
   step = undefined
   colorFnWrapper = undefined
-  colorFn = (x) ->
-    color = new THREE.Color()
-    console.log(JSON.stringify(color))
-    #color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
-    color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    color
+  #colorFn = (x) ->
+    #@color = new THREE.Color( 0xffffff )
+    #@color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
+    #console.log(JSON.stringify(color))
+    ##color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
+    #@color
 
   opts.animated = opts.animated or false
   @is_animated = opts.animated
@@ -170,11 +172,11 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
   if opts.format is "magnitude"
     step = 3
     colorFnWrapper = (data, i) ->
-      colorFn data[i + 2]
+      @colorFn data[i + 2]
   else if opts.format is "legend"
     step = 4
     colorFnWrapper = (data, i) ->
-      colorFn data[i + 3]
+      @colorFn data[i + 3]
   else
     throw ("error: format not supported: " + opts.format)
   if opts.animated
