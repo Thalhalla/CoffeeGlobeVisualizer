@@ -10,10 +10,10 @@
     #Create the earth and add it to our sim
     earth = new Earth()
     earth.init()
-    this.addObject(earth)
+    @addObject earth
     sun = new Sun()
     sun.init()
-    this.addObject(sun)
+    @addObject sun
     # Are the stars out tonight...?
     stars = new Stars()
 
