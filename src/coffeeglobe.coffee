@@ -95,7 +95,12 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 
 #@Earth:: = new Sim.Object()
 class Earth
-    constructor: -> Sim.Object.call(this)
+    constructor: ->
+    Sim.Object.call(this)
+    ROTATION_Y = 0.0025
+    TILT = 0.41
+    CLOUDS_SCALE = 1.005
+    CLOUDS_ROTATION_Y = ROTATION_Y * 0.95
 
     Earth.prototype = new Sim.Object()
 
@@ -267,10 +272,6 @@ class Earth
         @object3D.add(cloudMesh)
         @cloudsMesh = cloudMesh
 
-    ROTATION_Y = 0.0025
-    TILT = 0.41
-    CLOUDS_SCALE = 1.005
-    CLOUDS_ROTATION_Y = ROTATION_Y * 0.95
 
 #Sun Class
 @Sun = -> Sim.Object.call(this)
