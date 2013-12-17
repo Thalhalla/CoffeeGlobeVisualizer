@@ -51,6 +51,7 @@
 
     i = 0
 
+    console.log("fuckme")
     while i < years.length
       y = document.getElementById("year" + years[i])
       #y.addEventListener "mouseover", settime(globe, i), false
@@ -65,20 +66,20 @@
           data = JSON.parse(xhr.responseText)
           window.data = data
           i = 0
-          while i < data.length
-            globe.addData data[i][1],
-              format: "magnitude"
-              name: data[i][0]
-              animated: true
+          #while i < data.length
+            #globe.addData data[i][1],
+              #format: "magnitude"
+              #name: data[i][0]
+              #animated: true
 
-            i++
+            #i++
           console.log("createPoints")
-          globe.createPoints()
-          settime(globe, 0)()
-          globe.animate()
-          document.body.style.backgroundImage = "none" # remove loading
+          #globe.createPoints()
+          #settime(globe, 0)()
+          #globe.animate()
+          #document.body.style.backgroundImage = "none" # remove loading
 
-    xhr.send null
+    #xhr.send null
 
 EarthApp.SIZE_IN_EARTHS = 10;
 EarthApp.MOUSE_MOVE_TOLERANCE = 4;
@@ -98,10 +99,13 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 @Earth::init = ->
     earthGroup = new THREE.Object3D()
     #Tell the framework about our object
-    this.setObject3D(earthGroup)
+    @setObject3D(earthGroup)
     #Add earth and clouds
-    this.createGlobe()
-    this.createClouds()
+    console.log("createGlobe")
+    console.debug this
+    #console.log(JSON.stringify(earthGroup))
+    @createGlobe()
+    @createClouds()
 
 #@EarthApp::colorFn = (x) ->
     #color = new THREE.Color()
@@ -133,6 +137,8 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
     #add tilt
     globeMesh.rotation.z = Earth.TILT
     @object3D.add(globeMesh)
+    #window.globeMesh = globeMesh
+    console.debug this
     @globeMesh = globeMesh
 
 @Earth::createClouds = ->
@@ -175,7 +181,7 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
     point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
     point.position.y = 200 * Math.cos(phi)
     point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
-    point.lookAt @Earth.globeMesh.position
+    #point.lookAt @Earth.globeMesh.position
     point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
     point.updateMatrix()
     i = 0
