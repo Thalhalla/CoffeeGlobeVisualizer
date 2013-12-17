@@ -66,10 +66,10 @@
           window.data = data
           i = 0
           while i < data.length
-            globe.addData data[i][1],
-              format: "magnitude"
-              name: data[i][0]
-              animated: true
+            #globe.addData data[i][1],
+              #format: "magnitude"
+              #name: data[i][0]
+              #animated: true
 
             i++
           console.log("createPoints")
