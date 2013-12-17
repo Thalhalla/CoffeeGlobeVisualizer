@@ -91,179 +91,186 @@ EarthApp.EARTH_DISTANCE_SQUARED = 45000;
 EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 
 #Custom Earth class
-@Earth = -> Sim.Object.call(this)
+#@Earth = -> Sim.Object.call(this)
 
-@Earth:: = new Sim.Object()
+#@Earth:: = new Sim.Object()
+class Earth
+    constructor: -> Sim.Object.call(this)
 
-@Earth::init = ->
-    earthGroup = new THREE.Object3D()
-    #Tell the framework about our object
-    this.setObject3D(earthGroup)
-    #Add earth and clouds
-    this.createGlobe()
-    this.createClouds()
+    Earth.prototype = new Sim.Object()
 
-@Earth::colorFn = (x) ->
-    color = new THREE.Color()
-    console.log(JSON.stringify(color))
-    color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    color
+    createGlobe: ->
+        #Create our earth with nice texture
+        surfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
+        normalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
+        specularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
+        shader = THREE.ShaderLib["normalmap"]
+        uniforms = THREE.UniformsUtils.clone( shader.uniforms )
+        uniforms[ "tNormal" ].texture = normalMap
+        uniforms[ "tDiffuse" ].texture = surfaceMap
+        uniforms[ "tSpecular" ].texture = specularMap
+        uniforms["enableDiffuse"].value = true
+        uniforms["enableSpecular"].value = true
+        shaderMaterial = new THREE.ShaderMaterial({
+            fragmentShader: shader.fragmentShader,
+            vertexShader: shader.vertexShader,
+            uniforms: uniforms,
+            lights: true
+        })
+        globeGeometry = new THREE.SphereGeometry(1, 32, 32)
+        globeGeometry.computeTangents()
+        globeMesh = new THREE.Mesh( globeGeometry, shaderMaterial )
+        #add tilt
+        globeMesh.rotation.z = Earth.TILT
+        @object3D.add(globeMesh)
+        window.globeMesh = globeMesh
+        console.debug this
+        @globeMesh = globeMesh
 
-@Earth::createGlobe = ->
-    #Create our earth with nice texture
-    surfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
-    normalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
-    specularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
-    shader = THREE.ShaderUtils.lib["normal"]
-    uniforms = THREE.UniformsUtils.clone( shader.uniforms )
-    uniforms[ "tNormal" ].texture = normalMap
-    uniforms[ "tDiffuse" ].texture = surfaceMap
-    uniforms[ "tSpecular" ].texture = specularMap
-    uniforms["enableDiffuse"].value = true
-    uniforms["enableSpecular"].value = true
-    shaderMaterial = new THREE.ShaderMaterial({
-        fragmentShader: shader.fragmentShader,
-        vertexShader: shader.vertexShader,
-        uniforms: uniforms,
-        lights: true
-    })
-    globeGeometry = new THREE.SphereGeometry(1, 32, 32)
-    globeGeometry.computeTangents()
-    globeMesh = new THREE.Mesh( globeGeometry, shaderMaterial )
-    #add tilt
-    globeMesh.rotation.z = Earth.TILT
-    @object3D.add(globeMesh)
-    @globeMesh = globeMesh
+    addData:  (data, opts) ->
+      lat = undefined
+      lng = undefined
+      size = undefined
+      color = undefined
+      i = undefined
+      step = undefined
+      colorFnWrapper = undefined
+      colorFn = (x) ->
+        @color = new THREE.Color( 0xffffff )
+        @color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
+        console.log(JSON.stringify(color))
+        #color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
+        @color
 
-@Earth::createClouds = ->
-    cloudsMap = THREE.ImageUtils.loadTexture("../images/earth_clouds_1024.png")
-    cloudsMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, map: cloudsMap, transparent: true} )
-    cloudsGeometry = new THREE.SphereGeometry(Earth.CLOUDS_SCALE, 32, 32)
-    cloudMesh = new THREE.Mesh( cloudsGeometry, cloudsMaterial )
-    cloudMesh.rotation.x = Earth.TILT
-    @object3D.add(cloudMesh)
-    @cloudsMesh = cloudMesh
+      geometry = new THREE.CubeGeometry(0.75, 0.75, 1);
+      geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,-0.5));
+      point = new THREE.Mesh(geometry);
 
-@Earth::update = ->
-    #"I feel the Earth move"
-    @globeMesh.rotation.y += Earth.ROTATION_Y
-    @cloudsMesh.rotation.y += Earth.CLOUDS_ROTATION_Y
-    Sim.Object::update.call(this)
+      addPoint = (lat, lng, size, color, subgeo) ->
+        phi = (90 - lat) * Math.PI / 180
+        theta = (180 - lng) * Math.PI / 180
+        point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
+        point.position.y = 200 * Math.cos(phi)
+        point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
+        console.debug this
+        point.lookAt globeMesh.position
+        point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
+        point.updateMatrix()
+        i = 0
 
-@Earth::addData = (data, opts) ->
-  lat = undefined
-  lng = undefined
-  size = undefined
-  color = undefined
-  i = undefined
-  step = undefined
-  colorFnWrapper = undefined
-  #colorFn = (x) ->
-    #@color = new THREE.Color( 0xffffff )
-    #@color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    #console.log(JSON.stringify(color))
-    ##color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
-    #@color
-
-  opts.animated = opts.animated or false
-  @is_animated = opts.animated
-  opts.format = opts.format or "magnitude" # other option is 'legend'
-  console.log opts.format
-  if opts.format is "magnitude"
-    step = 3
-    colorFnWrapper = (data, i) ->
-      @colorFn data[i + 2]
-  else if opts.format is "legend"
-    step = 4
-    colorFnWrapper = (data, i) ->
-      @colorFn data[i + 3]
-  else
-    throw ("error: format not supported: " + opts.format)
-  if opts.animated
-    if @_baseGeometry is `undefined`
-      @_baseGeometry = new THREE.Geometry()
+      opts.animated = opts.animated or false
+      @is_animated = opts.animated
+      opts.format = opts.format or "magnitude" # other option is 'legend'
+      console.log opts.format
+      if opts.format is "magnitude"
+        step = 3
+        colorFnWrapper = (data, i) ->
+          colorFn data[i + 2]
+      else if opts.format is "legend"
+        step = 4
+        colorFnWrapper = (data, i) ->
+          colorFn data[i + 3]
+      else
+        throw ("error: format not supported: " + opts.format)
+      if opts.animated
+        if @_baseGeometry is `undefined`
+          @_baseGeometry = new THREE.Geometry()
+          i = 0
+          while i < data.length
+            lat = data[i]
+            lng = data[i + 1]
+            #        size = data[i + 2];
+            color = colorFnWrapper(data, i)
+            size = 0
+            addPoint lat, lng, size, color, @_baseGeometry
+            i += step
+        if @_morphTargetId is `undefined`
+          @_morphTargetId = 0
+        else
+          @_morphTargetId += 1
+        opts.name = opts.name or "morphTarget" + @_morphTargetId
+      subgeo = new THREE.Geometry()
       i = 0
       while i < data.length
         lat = data[i]
         lng = data[i + 1]
-        
-        #        size = data[i + 2];
         color = colorFnWrapper(data, i)
-        size = 0
-        addPoint lat, lng, size, color, @_baseGeometry
+        size = data[i + 2]
+        size = size * 200
+        addPoint lat, lng, size, color, subgeo
         i += step
-    if @_morphTargetId is `undefined`
-      @_morphTargetId = 0
-    else
-      @_morphTargetId += 1
-    opts.name = opts.name or "morphTarget" + @_morphTargetId
-  subgeo = new THREE.Geometry()
-  i = 0
-  while i < data.length
-    lat = data[i]
-    lng = data[i + 1]
-    color = colorFnWrapper(data, i)
-    size = data[i + 2]
-    size = size * 200
-    addPoint lat, lng, size, color, subgeo
-    i += step
-  if opts.animated
-    @_baseGeometry.morphTargets.push
-      name: opts.name
-      vertices: subgeo.vertices
+      if opts.animated
+        @_baseGeometry.morphTargets.push
+          name: opts.name
+          vertices: subgeo.vertices
 
-  else
-    @_baseGeometry = subgeo
-
-@Earth::createPoints = ->
-    if @_baseGeometry isnt `undefined`
-      if @is_animated is false
-        @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
-          color: 0xffffff
-          vertexColors: THREE.FaceColors
-          morphTargets: false
-        ))
       else
-        if @_baseGeometry.morphTargets.length < 8
-          console.log "t l", @_baseGeometry.morphTargets.length
-          padding = 8 - @_baseGeometry.morphTargets.length
-          console.log "padding", padding
-          i = 0
+        @_baseGeometry = subgeo
 
-          while i <= padding
-            console.log "padding", i
-            @_baseGeometry.morphTargets.push
-              name: "morphPadding" + i
-              vertices: @_baseGeometry.vertices
+      while i < point.geometry.faces.length
+        point.geometry.faces[i].color = color
+        i++
+      THREE.GeometryUtils.merge subgeo, point
 
-            i++
-        @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
-          color: 0xffffff
-          vertexColors: THREE.FaceColors
-          morphTargets: true
-        ))
-      scene.add @points
+    createPoints:  ->
+        if @_baseGeometry isnt `undefined`
+          if @is_animated is false
+            @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
+              color: 0xffffff
+              vertexColors: THREE.FaceColors
+              morphTargets: false
+            ))
+          else
+            if @_baseGeometry.morphTargets.length < 8
+              console.log "t l", @_baseGeometry.morphTargets.length
+              padding = 8 - @_baseGeometry.morphTargets.length
+              console.log "padding", padding
+              i = 0
 
-@Earth::addPoint = (lat, lng, size, color, subgeo) ->
-  phi = (90 - lat) * Math.PI / 180
-  theta = (180 - lng) * Math.PI / 180
-  point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
-  point.position.y = 200 * Math.cos(phi)
-  point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
-  point.lookAt mesh.position
-  point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
-  point.updateMatrix()
-  i = 0
+              while i <= padding
+                console.log "padding", i
+                @_baseGeometry.morphTargets.push
+                  name: "morphPadding" + i
+                  vertices: @_baseGeometry.vertices
 
-  while i < point.geometry.faces.length
-    point.geometry.faces[i].color = color
-    i++
-  THREE.GeometryUtils.merge subgeo, point
+                i++
+            @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
+              color: 0xffffff
+              vertexColors: THREE.FaceColors
+              morphTargets: true
+            ))
+          scene.add @points
 
-@Earth.ROTATION_Y = 0.0025
-@Earth.TILT = 0.41
-@Earth.CLOUDS_SCALE = 1.005
-@Earth.CLOUDS_ROTATION_Y = @Earth.ROTATION_Y * 0.95
+    update:  ->
+        #"I feel the Earth move"
+        @globeMesh.rotation.y += Earth.ROTATION_Y
+        @cloudsMesh.rotation.y += Earth.CLOUDS_ROTATION_Y
+        Sim.Object::update.call(this)
+
+    init:  ->
+        earthGroup = new THREE.Object3D()
+        #Tell the framework about our object
+        @setObject3D(earthGroup)
+        #Add earth and clouds
+        console.log "createGlobe"
+        console.debug this
+        #console.log(JSON.stringify(earthGroup))
+        @createGlobe()
+        @createClouds()
+
+    createClouds:  ->
+        cloudsMap = THREE.ImageUtils.loadTexture("../images/earth_clouds_1024.png")
+        cloudsMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, map: cloudsMap, transparent: true} )
+        cloudsGeometry = new THREE.SphereGeometry(Earth.CLOUDS_SCALE, 32, 32)
+        cloudMesh = new THREE.Mesh( cloudsGeometry, cloudsMaterial )
+        cloudMesh.rotation.x = Earth.TILT
+        @object3D.add(cloudMesh)
+        @cloudsMesh = cloudMesh
+
+    ROTATION_Y = 0.0025
+    TILT = 0.41
+    CLOUDS_SCALE = 1.005
+    CLOUDS_ROTATION_Y = ROTATION_Y * 0.95
 
 #Sun Class
 @Sun = -> Sim.Object.call(this)
