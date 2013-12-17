@@ -103,18 +103,18 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
     this.createGlobe()
     this.createClouds()
 
-@Earth::colorFn = (x) ->
-    color = new THREE.Color()
-    console.log(JSON.stringify(color))
-    color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    color
+#@EarthApp::colorFn = (x) ->
+    #color = new THREE.Color()
+    #console.log(JSON.stringify(color))
+    #color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
+    #color
 
 @Earth::createGlobe = ->
     #Create our earth with nice texture
     surfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
     normalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
     specularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
-    shader = THREE.ShaderUtils.lib["normal"]
+    shader = THREE.ShaderLib["normalmap"]
     uniforms = THREE.UniformsUtils.clone( shader.uniforms )
     uniforms[ "tNormal" ].texture = normalMap
     uniforms[ "tDiffuse" ].texture = surfaceMap
@@ -158,12 +158,32 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
   i = undefined
   step = undefined
   colorFnWrapper = undefined
-  #colorFn = (x) ->
-    #@color = new THREE.Color( 0xffffff )
-    #@color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-    #console.log(JSON.stringify(color))
-    ##color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
-    #@color
+  colorFn = (x) ->
+    color = new THREE.Color( 0xffffff )
+    #color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
+    color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
+    console.log(JSON.stringify(color))
+    color
+
+  addPoint = (lat, lng, size, color, subgeo) ->
+    phi = (90 - lat) * Math.PI / 180
+    theta = (180 - lng) * Math.PI / 180
+    geometry = new THREE.CubeGeometry(0.75, 0.75, 1)
+    geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,-0.5))
+    point = new THREE.Mesh(geometry)
+    #console.log(JSON.stringify(point))
+    point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
+    point.position.y = 200 * Math.cos(phi)
+    point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
+    point.lookAt @Earth.globeMesh.position
+    point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
+    point.updateMatrix()
+    i = 0
+
+    while i < point.geometry.faces.length
+      point.geometry.faces[i].color = color
+      i++
+    THREE.GeometryUtils.merge subgeo, point
 
   opts.animated = opts.animated or false
   @is_animated = opts.animated
@@ -172,11 +192,11 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
   if opts.format is "magnitude"
     step = 3
     colorFnWrapper = (data, i) ->
-      @colorFn data[i + 2]
+        colorFn data[i + 2]
   else if opts.format is "legend"
     step = 4
     colorFnWrapper = (data, i) ->
-      @colorFn data[i + 3]
+        @colorFn data[i + 3]
   else
     throw ("error: format not supported: " + opts.format)
   if opts.animated
@@ -244,21 +264,6 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
         ))
       scene.add @points
 
-@Earth::addPoint = (lat, lng, size, color, subgeo) ->
-  phi = (90 - lat) * Math.PI / 180
-  theta = (180 - lng) * Math.PI / 180
-  point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
-  point.position.y = 200 * Math.cos(phi)
-  point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
-  point.lookAt mesh.position
-  point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
-  point.updateMatrix()
-  i = 0
-
-  while i < point.geometry.faces.length
-    point.geometry.faces[i].color = color
-    i++
-  THREE.GeometryUtils.merge subgeo, point
 
 @Earth.ROTATION_Y = 0.0025
 @Earth.TILT = 0.41
