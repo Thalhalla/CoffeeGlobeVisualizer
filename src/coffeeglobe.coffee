@@ -19,13 +19,12 @@ class EarthApp
         Sim.App::init.call(this, param)
         #Create the earth and add it to our sim
         earth = new Earth()
-        console.log("earthinit")
+        #console.log("earthinit")
         earth.init()
         @addObject earth
         sun = new Sun()
-        console.log("suninit")
+        #console.log("suninit")
         sun.init()
-        console.debug sun
         @addObject sun
         # Are the stars out tonight...?
         stars = new Stars()
@@ -78,12 +77,16 @@ class EarthApp
               data = JSON.parse(xhr.responseText)
               window.data = data
               i = 0
-              while i < data.length
-                #globe.addData data[i][1],
-                  #format: "magnitude"
-                  #name: data[i][0]
-                  #animated: true
-
+              #globe.addData data[i][1],
+                #format: "magnitude"
+                #name: data[i][0]
+                #animated: true
+              #while i < data.length
+              while i < 3
+                globe.addData data[i][1],
+                  format: "magnitude"
+                  name: data[i][0]
+                  animated: true
                 i++
               console.log("createPoints")
               globe.createPoints()
@@ -129,7 +132,7 @@ class Earth
         #add tilt
         globeMesh.rotation.z = Earth.TILT
         @object3D.add(globeMesh)
-        console.log "createGlobemesh after"
+        #console.log "createGlobemesh after"
         #console.debug this
         window.globeMesh = globeMesh
         @globeMesh = globeMesh
@@ -163,6 +166,11 @@ class Earth
         point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
         point.updateMatrix()
         i = 0
+        while i < point.geometry.faces.length
+            point.geometry.faces[i].color = color
+            console.log "point"
+            i++
+        THREE.GeometryUtils.merge subgeo, point
 
       opts.animated = opts.animated or false
       @is_animated = opts.animated
@@ -182,7 +190,9 @@ class Earth
         if @_baseGeometry is `undefined`
           @_baseGeometry = new THREE.Geometry()
           i = 0
-          while i < data.length
+          #while i < data.length
+          console.log data.length
+          while i < 3
             lat = data[i]
             lng = data[i + 1]
             #        size = data[i + 2]
@@ -196,8 +206,13 @@ class Earth
           @_morphTargetId += 1
         opts.name = opts.name or "morphTarget" + @_morphTargetId
       subgeo = new THREE.Geometry()
+
+      console.log("globe this")
+      console.debug this
       i = 0
-      while i < data.length
+      #while i < data.length
+      console.log data.length
+      while i < 3
         lat = data[i]
         lng = data[i + 1]
         color = colorFnWrapper(data, i)
@@ -213,10 +228,6 @@ class Earth
       else
         @_baseGeometry = subgeo
 
-      while i < point.geometry.faces.length
-        point.geometry.faces[i].color = color
-        i++
-      THREE.GeometryUtils.merge subgeo, point
 
     createPoints:  ->
         if @_baseGeometry isnt `undefined`
@@ -258,7 +269,7 @@ class Earth
         #Tell the framework about our object
         @setObject3D(earthGroup)
         #Add earth and clouds
-        console.log "createGlobe"
+        #console.log "createGlobe"
         #console.debug this
         #console.log(JSON.stringify(earthGroup))
         @createGlobe()
