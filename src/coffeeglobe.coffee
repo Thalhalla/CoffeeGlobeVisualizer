@@ -213,7 +213,8 @@ class Earth
         else
           @_morphTargetId += 1
         opts.name = opts.name or "morphTarget" + @_morphTargetId
-      subgeo = new THREE.Geometry()
+      #subgeo = new THREE.Geometry()
+      subgeo = 2
 
       #console.log("globe this")
       #console.debug this
