@@ -8,7 +8,7 @@
     while i < Stars.NVERTICES
         vector = new THREE.Vector3((Math.random() * 2 - 1) * minDistance, (Math.random() * 2 - 1) * minDistance, (Math.random() * 2 - 1) * minDistance)
         vector = vector.setLength(minDistance)  if vector.length() < minDistance
-        starsGeometry.vertices.push new THREE.Vertex(vector)
+        starsGeometry.vertices.push vector
         i++
     # Create a range of sizes and colors for the stars
     starsMaterials = []

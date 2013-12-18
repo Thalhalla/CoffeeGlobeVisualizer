@@ -9,6 +9,7 @@
     Sim.App::init.call(this, param)
     #Create the earth and add it to our sim
     earth = new Earth()
+    console.log("earthinit")
     earth.init()
     @addObject earth
     sun = new Sun()
@@ -22,17 +23,17 @@
     @addObject stars
 
     # Are the spikes out tonight...?
-    spikes = new Spikes()
+    #spikes = new Spikes()
 
     # Push the spikes out past Pluto
-    spikes.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
-    @addObject spikes
+    #spikes.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+    #@addObject spikes
 
     years = ["1990", "1995", "2000"]
     container = document.getElementById("container")
     #globe = new DAT.Globe(container)
     globe = earth
-    console.log globe
+    #console.log globe
     i = undefined
     tweens = []
     settime = (globe, t) ->
@@ -75,7 +76,7 @@
           console.log("createPoints")
           globe.createPoints()
           settime(globe, 0)()
-          globe.animate()
+          #globe.animate()
           document.body.style.backgroundImage = "none" # remove loading
 
     xhr.send null
@@ -97,39 +98,41 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 class Earth
     constructor: ->
     Sim.Object.call(this)
-    ROTATION_Y = 0.0025
-    TILT = 0.41
-    CLOUDS_SCALE = 1.005
-    CLOUDS_ROTATION_Y = ROTATION_Y * 0.95
 
     Earth.prototype = new Sim.Object()
 
     createGlobe: ->
         #Create our earth with nice texture
-        surfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
-        normalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
-        specularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
+        earthSurfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
+        earthNormalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
+        earthSpecularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
         shader = THREE.ShaderLib["normalmap"]
-        uniforms = THREE.UniformsUtils.clone( shader.uniforms )
-        uniforms[ "tNormal" ].texture = normalMap
-        uniforms[ "tDiffuse" ].texture = surfaceMap
-        uniforms[ "tSpecular" ].texture = specularMap
-        uniforms["enableDiffuse"].value = true
-        uniforms["enableSpecular"].value = true
-        shaderMaterial = new THREE.ShaderMaterial({
-            fragmentShader: shader.fragmentShader,
-            vertexShader: shader.vertexShader,
-            uniforms: uniforms,
-            lights: true
-        })
+        #uniforms = THREE.UniformsUtils.clone( shader.uniforms )
+        #uniforms[ "tNormal" ].texture = normalMap
+        #uniforms[ "tDiffuse" ].texture = surfaceMap
+        #uniforms[ "tSpecular" ].texture = specularMap
+        #uniforms["enableDiffuse"].value = true
+        #uniforms["enableSpecular"].value = true
+        #shaderMaterial = new THREE.ShaderMaterial({
+            #fragmentShader: shader.fragmentShader,
+            #vertexShader: shader.vertexShader,
+            #uniforms: uniforms,
+            #lights: true
+        #})
+        shaderMaterial = new THREE.MeshPhongMaterial({
+        map: earthSurfaceMap,
+        normalMap: earthNormalMap,
+        specularMap: earthSpecularMap});
         globeGeometry = new THREE.SphereGeometry(1, 32, 32)
-        globeGeometry.computeTangents()
+        #globeGeometry.computeTangents()
         globeMesh = new THREE.Mesh( globeGeometry, shaderMaterial )
         #add tilt
         globeMesh.rotation.z = Earth.TILT
         @object3D.add(globeMesh)
-        window.globeMesh = globeMesh
+        #@globeMesh = globeMesh
+        console.log "createGlobemesh after"
         console.debug this
+        window.globeMesh = globeMesh
         @globeMesh = globeMesh
 
     addData:  (data, opts) ->
@@ -157,8 +160,8 @@ class Earth
         point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
         point.position.y = 200 * Math.cos(phi)
         point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
-        console.debug this
-        point.lookAt globeMesh.position
+        #console.debug this
+        point.lookAt window.globeMesh.position
         point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
         point.updateMatrix()
         i = 0
@@ -248,7 +251,7 @@ class Earth
 
     update:  ->
         #"I feel the Earth move"
-        @globeMesh.rotation.y += Earth.ROTATION_Y
+        window.globeMesh.rotation.y += Earth.ROTATION_Y
         @cloudsMesh.rotation.y += Earth.CLOUDS_ROTATION_Y
         Sim.Object::update.call(this)
 
@@ -258,7 +261,7 @@ class Earth
         @setObject3D(earthGroup)
         #Add earth and clouds
         console.log "createGlobe"
-        console.debug this
+        #console.debug this
         #console.log(JSON.stringify(earthGroup))
         @createGlobe()
         @createClouds()
@@ -273,6 +276,10 @@ class Earth
         @cloudsMesh = cloudMesh
 
 
+Earth.ROTATION_Y = 0.0025
+Earth.TILT = 0.41
+Earth.CLOUDS_SCALE = 1.005
+Earth.CLOUDS_ROTATION_Y = Earth.ROTATION_Y * 0.95
 #Sun Class
 @Sun = -> Sim.Object.call(this)
 @Sun:: = new Sim.Object()
