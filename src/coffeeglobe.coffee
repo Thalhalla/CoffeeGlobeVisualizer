@@ -1,3 +1,4 @@
+root = global ? window
 renderer = null
 scene = null
 camera = null
@@ -30,14 +31,14 @@ class EarthApp
         #console.log("starinit")
         stars = new Stars()
         # Push the stars out past Pluto
-        stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+        #stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+        stars.init 5000
         @addObject stars
 
         # Are the spikes out tonight...?
         #spikes = new Spikes()
-
         # Push the spikes out past Pluto
-        #spikes.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+        #spikes.init
         #@addObject spikes
 
         years = ["1990", "1995", "2000"]
@@ -81,30 +82,35 @@ class EarthApp
                 #format: "magnitude"
                 #name: data[i][0]
                 #animated: true
-              #while i < data.length
-              while i < 3
-                globe.addData data[i][1],
+              #while i < 3
+              while i < data.length
+                #globe.addData data[i][1],
+                earth.addData data[i][1],
                   format: "magnitude"
                   name: data[i][0]
                   animated: true
                 i++
-              console.log("createPoints")
-              globe.createPoints()
+              #console.log("createPoints")
+              #globe.createPoints()
+              dataspikes = earth.createPoints()
               settime(globe, 0)()
               #globe.animate()
               document.body.style.backgroundImage = "none" # remove loading
 
         xhr.send null
+        #earth.createTestSpike()
+        #@addObject dataspikes
+        #@addObject spikes
 
-EarthApp.SIZE_IN_EARTHS = 10
+EarthApp.SIZE_IN_EARTHS = 2000
 EarthApp.MOUSE_MOVE_TOLERANCE = 4
 EarthApp.MAX_ROTATION_X = Math.PI / 2
 EarthApp.MAX_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 50
 EarthApp.MIN_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 3
-EarthApp.EARTH_DISTANCE = 50
-EarthApp.PLUTO_DISTANCE_IN_EARTHS = 77.2
-EarthApp.EARTH_DISTANCE_SQUARED = 45000
-EarthApp.EXAGGERATED_PLANET_SCALE = 5.55
+EarthApp.EARTH_DISTANCE = 10000
+EarthApp.PLUTO_DISTANCE_IN_EARTHS = 7700.2
+EarthApp.EARTH_DISTANCE_SQUARED = 4500000
+EarthApp.EXAGGERATED_PLANET_SCALE = 50.55
 
 #Custom Earth class
 #@Earth = -> Sim.Object.call(this)
@@ -126,7 +132,7 @@ class Earth
         map: earthSurfaceMap,
         normalMap: earthNormalMap,
         specularMap: earthSpecularMap})
-        globeGeometry = new THREE.SphereGeometry(1, 32, 32)
+        globeGeometry = new THREE.SphereGeometry(200, 32, 32)
         #globeGeometry.computeTangents()
         globeMesh = new THREE.Mesh( globeGeometry, shaderMaterial )
         #add tilt
@@ -153,9 +159,9 @@ class Earth
 
       geometry = new THREE.CubeGeometry 0.75, 0.75, 1
       geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
-      point = new THREE.Mesh geometry
 
       addPoint = (lat, lng, size, color, subgeo) ->
+        point = new THREE.Mesh geometry
         phi = (90 - lat) * Math.PI / 180
         theta = (180 - lng) * Math.PI / 180
         point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
@@ -171,6 +177,8 @@ class Earth
             #console.log "point"
             i++
         THREE.GeometryUtils.merge subgeo, point
+        #@object3D.add(point)
+        point
 
       opts.animated = opts.animated or false
       @is_animated = opts.animated
@@ -187,8 +195,8 @@ class Earth
       else
         throw ("error: format not supported: " + opts.format)
       if opts.animated
-        if @_baseGeometry is `undefined`
-          @_baseGeometry = new THREE.Geometry()
+        if root.point_baseGeometry is `undefined`
+          root.point_baseGeometry = new THREE.Geometry()
           i = 0
           #while i < data.length
           console.log data.length
@@ -198,7 +206,7 @@ class Earth
             #        size = data[i + 2]
             color = colorFnWrapper(data, i)
             size = 0
-            addPoint lat, lng, size, color, @_baseGeometry
+            addPoint lat, lng, size, color, root.point_baseGeometry
             i += step
         if @_morphTargetId is `undefined`
           @_morphTargetId = 0
@@ -212,56 +220,65 @@ class Earth
       i = 0
       #while i < data.length
       console.log data.length
-      while i < 3
+      console.debug data
+      while i < 15
         lat = data[i]
         lng = data[i + 1]
         color = colorFnWrapper(data, i)
         size = data[i + 2]
         size = size * 200
-        addPoint lat, lng, size, color, subgeo
+        console.log "lat long", lat, lng, size, color
+        @object3D.add( addPoint(lat, lng, size, color, subgeo))
         i += step
       if opts.animated
-        @_baseGeometry.morphTargets.push
+        root.point_baseGeometry.morphTargets.push
           name: opts.name
           vertices: subgeo.vertices
 
       else
-        @_baseGeometry = subgeo
+        root.point_baseGeometry = subgeo
 
 
     createPoints:  ->
-        if @_baseGeometry isnt `undefined`
+        if root.point_baseGeometry isnt `undefined`
+          #console.debug root.point_baseGeometry
           if @is_animated is false
-            @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
+            points = new THREE.Mesh(root.point_baseGeometry, new THREE.MeshBasicMaterial(
               color: 0xffffff
               vertexColors: THREE.FaceColors
               morphTargets: false
             ))
           else
-            if @_baseGeometry.morphTargets.length < 8
-              console.log "t l", @_baseGeometry.morphTargets.length
-              padding = 8 - @_baseGeometry.morphTargets.length
+            if root.point_baseGeometry.morphTargets.length < 8
+              console.log "t l", root.point_baseGeometry.morphTargets.length
+              padding = 8 - root.point_baseGeometry.morphTargets.length
               console.log "padding", padding
               i = 0
 
               while i <= padding
                 console.log "padding", i
-                @_baseGeometry.morphTargets.push
+                root.point_baseGeometry.morphTargets.push
                   name: "morphPadding" + i
-                  vertices: @_baseGeometry.vertices
+                  vertices: root.point_baseGeometry.vertices
 
                 i++
-            @points = new THREE.Mesh(@_baseGeometry, new THREE.MeshBasicMaterial(
+            points = new THREE.Mesh(root.point_baseGeometry, new THREE.MeshBasicMaterial(
               color: 0xffffff
               vertexColors: THREE.FaceColors
               morphTargets: true
             ))
-          scene.add @points
+          #scene.add @points
+          #@addObject @points
+          console.log "points"
+          #console.debug points
+          @object3D.add(points)
+          @points = points
 
     update:  ->
         #"I feel the Earth move"
         window.globeMesh.rotation.y += Earth.ROTATION_Y
         @cloudsMesh.rotation.y += Earth.CLOUDS_ROTATION_Y
+        #@fuckmeMesh.rotation.y += Earth.ROTATION_Y
         Sim.Object::update.call(this)
 
     init:  ->
@@ -274,6 +291,7 @@ class Earth
         #console.log(JSON.stringify(earthGroup))
         @createGlobe()
         @createClouds()
+        #@createTestSpike()
 
     createClouds:  ->
         cloudsMap = THREE.ImageUtils.loadTexture("../images/earth_clouds_1024.png")
@@ -283,11 +301,55 @@ class Earth
         cloudMesh.rotation.x = Earth.TILT
         @object3D.add(cloudMesh)
         @cloudsMesh = cloudMesh
+    createTestSpike:  ->
+        geometry = new THREE.CubeGeometry 0.75, 0.75, 1
+        geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
+        point = new THREE.Mesh geometry
+        phi = (90 - 15) * Math.PI / 180
+        theta = (180 - 10) * Math.PI / 180
+        point.position.x = 200 * Math.sin(phi) * Math.cos(theta)
+        point.position.y = 200 * Math.cos(phi)
+        point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
+        point.lookAt window.globeMesh.position
+        point.scale.z = Math.max(500, 0.1) # avoid non-invertible matrix
+        console.log "scaleZ", point.scale.z
+        point.updateMatrix()
+        i = 0
+        while i < point.geometry.faces.length
+            point.geometry.faces[i].color =  0xff0000
+            i++
+        #THREE.GeometryUtils.merge subgeo, point
+        #Create our earth with nice texture
+        fuckSurfaceMap = THREE.ImageUtils.loadTexture("../images/earth_surface_2048.jpg")
+        fuckNormalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
+        fuckSpecularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
+        #shader = THREE.ShaderLib["normalmap"]
+        shaderMaterial = new THREE.MeshPhongMaterial({
+        map: fuckSurfaceMap,
+        normalMap: fuckNormalMap,
+        specularMap: fuckSpecularMap})
+        fuckmeGeometry = new THREE.CubeGeometry(300, 320, 320)
+        #fuckmeGeometry.computeTangents()
+        fuckmeMesh = new THREE.Mesh( fuckmeGeometry, shaderMaterial )
+        #add tilt
+        fuckmeMesh.rotation.z = Earth.TILT
+        #@object3D.add(fuckmeMesh)
+        #@object3D.add(point)
+        #console.log "createfuckmemesh after"
+        #console.debug this
+        #window.fuckmeMesh = fuckmeMesh
+        #window.point = point
+        #@fuckmeMesh = point
+        @object3D.add(fuckmeMesh)
+        #@fuckm;eMesh = fuckmeMesh
+        @object3D.add(point)
+        #@point = point
 
 
 Earth.ROTATION_Y = 0.0025
 Earth.TILT = 0.41
-Earth.CLOUDS_SCALE = 1.005
+Earth.CLOUDS_SCALE = 1.005 * 200
+Earth.SPIKE_SCALE = 1.005 * 300
 Earth.CLOUDS_ROTATION_Y = Earth.ROTATION_Y * 0.95
 
 class Sun
@@ -322,6 +384,7 @@ class Stars
             starsMaterials.push new THREE.ParticleBasicMaterial(
                 color: 0x101010 * (i + 1)
                 size: i % 2 + 1
+                #size: i * 2 + 1
                 sizeAttenuation: false
             )
             i++
