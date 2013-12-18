@@ -13,7 +13,9 @@
     earth.init()
     @addObject earth
     sun = new Sun()
+    console.log("suninit")
     sun.init()
+    console.debug sun
     @addObject sun
     # Are the stars out tonight...?
     stars = new Stars()
@@ -131,7 +133,7 @@ class Earth
         @object3D.add(globeMesh)
         #@globeMesh = globeMesh
         console.log "createGlobemesh after"
-        console.debug this
+        #console.debug this
         window.globeMesh = globeMesh
         @globeMesh = globeMesh
 
@@ -280,13 +282,3 @@ Earth.ROTATION_Y = 0.0025
 Earth.TILT = 0.41
 Earth.CLOUDS_SCALE = 1.005
 Earth.CLOUDS_ROTATION_Y = Earth.ROTATION_Y * 0.95
-#Sun Class
-@Sun = -> Sim.Object.call(this)
-@Sun:: = new Sim.Object()
-@Sun::init = ->
-    #Create a point light to show off the Earth -set the light out back 
-    #and to the left a bit
-    light = new THREE.PointLight( 0xffffff, 2, 100)
-    light.position.set(-10, 0, 20)
-    #Tell the framework about our object
-    this.setObject3D(light)
