@@ -85,20 +85,20 @@ class EarthApp
               #while i < 3
               while i < data.length
                 #globe.addData data[i][1],
-                earth.addData data[i][1],
-                  format: "magnitude"
-                  name: data[i][0]
-                  animated: true
+                #earth.addData data[i][1],
+                  #format: "magnitude"
+                  #name: data[i][0]
+                  #animated: true
                 i++
               #console.log("createPoints")
               #globe.createPoints()
-              dataspikes = earth.createPoints()
+              #dataspikes = earth.createPoints()
               settime(globe, 0)()
               #globe.animate()
               document.body.style.backgroundImage = "none" # remove loading
 
         xhr.send null
-        #earth.createTestSpike()
+        earth.createTestSpike()
         #@addObject dataspikes
         #@addObject spikes
 
