@@ -157,10 +157,10 @@ class Earth
         #console.log JSON.stringify(color)
         @color
 
-      geometry = new THREE.CubeGeometry 0.75, 0.75, 1
-      geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
 
       addPoint = (lat, lng, size, color, subgeo) ->
+        geometry = new THREE.CubeGeometry 0.75, 0.75, 1
+        geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
         point = new THREE.Mesh geometry
         phi = (90 - lat) * Math.PI / 180
         theta = (180 - lng) * Math.PI / 180
@@ -176,7 +176,7 @@ class Earth
             point.geometry.faces[i].color = color
             #console.log "point"
             i++
-        THREE.GeometryUtils.merge subgeo, point
+        #THREE.GeometryUtils.merge subgeo, point
         #@object3D.add(point)
         point
 
@@ -221,7 +221,7 @@ class Earth
       #while i < data.length
       console.log data.length
       console.debug data
-      while i < 15
+      while i < 3
         lat = data[i]
         lng = data[i + 1]
         color = colorFnWrapper(data, i)
@@ -276,7 +276,7 @@ class Earth
 
     update:  ->
         #"I feel the Earth move"
-        window.globeMesh.rotation.y += Earth.ROTATION_Y
+        #window.globeMesh.rotation.y += Earth.ROTATION_Y
         @cloudsMesh.rotation.y += Earth.CLOUDS_ROTATION_Y
         #@fuckmeMesh.rotation.y += Earth.ROTATION_Y
         Sim.Object::update.call(this)
