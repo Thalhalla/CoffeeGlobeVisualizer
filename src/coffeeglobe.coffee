@@ -1,87 +1,97 @@
-#Constructor
-@EarthApp = ->
-    Sim.App.call(this)
-#Subclass Sim.App
-@EarthApp:: =  new Sim.App()
-#Our Custom Initializer
-@EarthApp::init = (param) ->
-    #Call Superclass init code to set up scene, renderer, and default camera
-    Sim.App::init.call(this, param)
-    #Create the earth and add it to our sim
-    earth = new Earth()
-    console.log("earthinit")
-    earth.init()
-    @addObject earth
-    sun = new Sun()
-    console.log("suninit")
-    sun.init()
-    console.debug sun
-    @addObject sun
-    # Are the stars out tonight...?
-    stars = new Stars()
+renderer = null
+scene = null
+camera = null
+mesh = null
 
-    # Push the stars out past Pluto
-    stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
-    @addObject stars
+$(document).ready ->
+    container = document.getElementById("container");
+    app = new EarthApp();
+    app.init({ container: container });
+    app.run();
 
-    # Are the spikes out tonight...?
-    #spikes = new Spikes()
+class EarthApp
+    constructor: ->
+        Sim.App.call(this)
 
-    # Push the spikes out past Pluto
-    #spikes.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
-    #@addObject spikes
+    EarthApp.prototype = new Sim.App()
+    init: (param) ->
+        #Call Superclass init code to set up scene, renderer, and default camera
+        Sim.App::init.call(this, param)
+        #Create the earth and add it to our sim
+        earth = new Earth()
+        console.log("earthinit")
+        earth.init()
+        @addObject earth
+        sun = new Sun()
+        console.log("suninit")
+        sun.init()
+        console.debug sun
+        @addObject sun
+        # Are the stars out tonight...?
+        stars = new Stars()
 
-    years = ["1990", "1995", "2000"]
-    container = document.getElementById("container")
-    #globe = new DAT.Globe(container)
-    globe = earth
-    #console.log globe
-    i = undefined
-    tweens = []
-    settime = (globe, t) ->
-      ->
-        new TWEEN.Tween(globe).to(
-          time: t / years.length
-        , 500).easing(TWEEN.Easing.Cubic.EaseOut).start()
-        y = document.getElementById("year" + years[t])
-        return  if y.getAttribute("class") is "year active"
-        yy = document.getElementsByClassName("year")
+        # Push the stars out past Pluto
+        stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+        @addObject stars
+
+        # Are the spikes out tonight...?
+        #spikes = new Spikes()
+
+        # Push the spikes out past Pluto
+        #spikes.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
+        #@addObject spikes
+
+        years = ["1990", "1995", "2000"]
+        container = document.getElementById("container")
+        #globe = new DAT.Globe(container)
+        globe = earth
+        #console.log globe
+        i = undefined
+        tweens = []
+        settime = (globe, t) ->
+          ->
+            new TWEEN.Tween(globe).to(
+              time: t / years.length
+            , 500).easing(TWEEN.Easing.Cubic.EaseOut).start()
+            y = document.getElementById("year" + years[t])
+            return  if y.getAttribute("class") is "year active"
+            yy = document.getElementsByClassName("year")
+            i = 0
+            while i < yy.length
+              yy[i].setAttribute "class", "year"
+              i++
+            y.setAttribute "class", "year active"
+
         i = 0
-        while i < yy.length
-          yy[i].setAttribute "class", "year"
+
+        while i < years.length
+          y = document.getElementById("year" + years[i])
+          #y.addEventListener "mouseover", settime(globe, i), false
           i++
-        y.setAttribute "class", "year active"
+        xhr = undefined
+        #TWEEN.start()
+        xhr = new XMLHttpRequest()
+        xhr.open "GET", "../globe/population909500.json", true
+        xhr.onreadystatechange = (e) ->
+          if xhr.readyState is 4
+            if xhr.status is 200
+              data = JSON.parse(xhr.responseText)
+              window.data = data
+              i = 0
+              while i < data.length
+                #globe.addData data[i][1],
+                  #format: "magnitude"
+                  #name: data[i][0]
+                  #animated: true
 
-    i = 0
+                i++
+              console.log("createPoints")
+              globe.createPoints()
+              settime(globe, 0)()
+              #globe.animate()
+              document.body.style.backgroundImage = "none" # remove loading
 
-    while i < years.length
-      y = document.getElementById("year" + years[i])
-      #y.addEventListener "mouseover", settime(globe, i), false
-      i++
-    xhr = undefined
-    #TWEEN.start()
-    xhr = new XMLHttpRequest()
-    xhr.open "GET", "../globe/population909500.json", true
-    xhr.onreadystatechange = (e) ->
-      if xhr.readyState is 4
-        if xhr.status is 200
-          data = JSON.parse(xhr.responseText)
-          window.data = data
-          i = 0
-          while i < data.length
-            #globe.addData data[i][1],
-              #format: "magnitude"
-              #name: data[i][0]
-              #animated: true
-
-            i++
-          console.log("createPoints")
-          globe.createPoints()
-          settime(globe, 0)()
-          #globe.animate()
-          document.body.style.backgroundImage = "none" # remove loading
-
-    xhr.send null
+        xhr.send null
 
 EarthApp.SIZE_IN_EARTHS = 10;
 EarthApp.MOUSE_MOVE_TOLERANCE = 4;
@@ -99,7 +109,7 @@ EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
 #@Earth:: = new Sim.Object()
 class Earth
     constructor: ->
-    Sim.Object.call(this)
+        Sim.Object.call(this)
 
     Earth.prototype = new Sim.Object()
 
