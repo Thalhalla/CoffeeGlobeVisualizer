@@ -27,8 +27,8 @@ class EarthApp
         sun.init()
         @addObject sun
         # Are the stars out tonight...?
+        #console.log("starinit")
         stars = new Stars()
-
         # Push the stars out past Pluto
         stars.init EarthApp.SIZE_IN_EARTHS + EarthApp.EARTH_DISTANCE * EarthApp.PLUTO_DISTANCE_IN_EARTHS
         @addObject stars
@@ -148,7 +148,7 @@ class Earth
       colorFn = (x) ->
         @color = new THREE.Color( 0xffffff )
         @color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
-        console.log JSON.stringify(color)
+        #console.log JSON.stringify(color)
         @color
 
       geometry = new THREE.CubeGeometry 0.75, 0.75, 1
@@ -168,7 +168,7 @@ class Earth
         i = 0
         while i < point.geometry.faces.length
             point.geometry.faces[i].color = color
-            console.log "point"
+            #console.log "point"
             i++
         THREE.GeometryUtils.merge subgeo, point
 
@@ -207,8 +207,8 @@ class Earth
         opts.name = opts.name or "morphTarget" + @_morphTargetId
       subgeo = new THREE.Geometry()
 
-      console.log("globe this")
-      console.debug this
+      #console.log("globe this")
+      #console.debug this
       i = 0
       #while i < data.length
       console.log data.length
@@ -301,3 +301,41 @@ class Sun
         light.position.set(-10, 0, 20)
         #Tell the framework about our object
         this.setObject3D(light)
+
+class Stars
+    constructor: ->
+        Sim.Object.call(this)
+    Stars.prototype = new Sim.Object()
+    init: (minDistance) ->
+        starsGroup = new THREE.Object3D()
+        starsGeometry = new THREE.Geometry()
+        i = 0
+        while i < Stars.NVERTICES
+            vector = new THREE.Vector3((Math.random() * 2 - 1) * minDistance, (Math.random() * 2 - 1) * minDistance, (Math.random() * 2 - 1) * minDistance)
+            vector = vector.setLength(minDistance)  if vector.length() < minDistance
+            starsGeometry.vertices.push vector
+            i++
+        # Create a range of sizes and colors for the stars
+        starsMaterials = []
+        i = 0
+        while i < Stars.NMATERIALS
+            starsMaterials.push new THREE.ParticleBasicMaterial(
+                color: 0x101010 * (i + 1)
+                size: i % 2 + 1
+                sizeAttenuation: false
+            )
+            i++
+
+        # Create several particle systems spread around in a circle, cover the sky
+        i = 0
+        while i < Stars.NPARTICLESYSTEMS
+            stars = new THREE.ParticleSystem(starsGeometry, starsMaterials[i % Stars.NMATERIALS])
+            stars.rotation.y = i / (Math.PI * 2)
+            starsGroup.add stars
+            i++
+        # Tell the framework about our object
+        @setObject3D starsGroup
+
+Stars.NVERTICES = 667;
+Stars.NMATERIALS = 8;
+Stars.NPARTICLESYSTEMS = 24;
