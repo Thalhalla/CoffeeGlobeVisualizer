@@ -4,10 +4,10 @@ camera = null
 mesh = null
 
 $(document).ready ->
-    container = document.getElementById("container");
-    app = new EarthApp();
-    app.init({ container: container });
-    app.run();
+    container = document.getElementById("container")
+    app = new EarthApp()
+    app.init({ container: container })
+    app.run()
 
 class EarthApp
     constructor: ->
@@ -93,15 +93,15 @@ class EarthApp
 
         xhr.send null
 
-EarthApp.SIZE_IN_EARTHS = 10;
-EarthApp.MOUSE_MOVE_TOLERANCE = 4;
-EarthApp.MAX_ROTATION_X = Math.PI / 2;
-EarthApp.MAX_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 50;
-EarthApp.MIN_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 3;
-EarthApp.EARTH_DISTANCE = 50;
-EarthApp.PLUTO_DISTANCE_IN_EARTHS = 77.2;
-EarthApp.EARTH_DISTANCE_SQUARED = 45000;
-EarthApp.EXAGGERATED_PLANET_SCALE = 5.55;
+EarthApp.SIZE_IN_EARTHS = 10
+EarthApp.MOUSE_MOVE_TOLERANCE = 4
+EarthApp.MAX_ROTATION_X = Math.PI / 2
+EarthApp.MAX_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 50
+EarthApp.MIN_CAMERA_Z = EarthApp.SIZE_IN_EARTHS * 3
+EarthApp.EARTH_DISTANCE = 50
+EarthApp.PLUTO_DISTANCE_IN_EARTHS = 77.2
+EarthApp.EARTH_DISTANCE_SQUARED = 45000
+EarthApp.EXAGGERATED_PLANET_SCALE = 5.55
 
 #Custom Earth class
 #@Earth = -> Sim.Object.call(this)
@@ -119,29 +119,16 @@ class Earth
         earthNormalMap = THREE.ImageUtils.loadTexture("../images/earth_normal_2048.jpg")
         earthSpecularMap = THREE.ImageUtils.loadTexture("../images/earth_specular_2048.jpg")
         shader = THREE.ShaderLib["normalmap"]
-        #uniforms = THREE.UniformsUtils.clone( shader.uniforms )
-        #uniforms[ "tNormal" ].texture = normalMap
-        #uniforms[ "tDiffuse" ].texture = surfaceMap
-        #uniforms[ "tSpecular" ].texture = specularMap
-        #uniforms["enableDiffuse"].value = true
-        #uniforms["enableSpecular"].value = true
-        #shaderMaterial = new THREE.ShaderMaterial({
-            #fragmentShader: shader.fragmentShader,
-            #vertexShader: shader.vertexShader,
-            #uniforms: uniforms,
-            #lights: true
-        #})
         shaderMaterial = new THREE.MeshPhongMaterial({
         map: earthSurfaceMap,
         normalMap: earthNormalMap,
-        specularMap: earthSpecularMap});
+        specularMap: earthSpecularMap})
         globeGeometry = new THREE.SphereGeometry(1, 32, 32)
         #globeGeometry.computeTangents()
         globeMesh = new THREE.Mesh( globeGeometry, shaderMaterial )
         #add tilt
         globeMesh.rotation.z = Earth.TILT
         @object3D.add(globeMesh)
-        #@globeMesh = globeMesh
         console.log "createGlobemesh after"
         #console.debug this
         window.globeMesh = globeMesh
@@ -157,14 +144,13 @@ class Earth
       colorFnWrapper = undefined
       colorFn = (x) ->
         @color = new THREE.Color( 0xffffff )
-        @color.setHSL((0.6 - (x * 0.5)), 1.0, 0.5)
-        console.log(JSON.stringify(color))
-        #color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
+        @color.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
+        console.log JSON.stringify(color)
         @color
 
-      geometry = new THREE.CubeGeometry(0.75, 0.75, 1);
-      geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,-0.5));
-      point = new THREE.Mesh(geometry);
+      geometry = new THREE.CubeGeometry 0.75, 0.75, 1
+      geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
+      point = new THREE.Mesh geometry
 
       addPoint = (lat, lng, size, color, subgeo) ->
         phi = (90 - lat) * Math.PI / 180
@@ -199,7 +185,7 @@ class Earth
           while i < data.length
             lat = data[i]
             lng = data[i + 1]
-            #        size = data[i + 2];
+            #        size = data[i + 2]
             color = colorFnWrapper(data, i)
             size = 0
             addPoint lat, lng, size, color, @_baseGeometry
