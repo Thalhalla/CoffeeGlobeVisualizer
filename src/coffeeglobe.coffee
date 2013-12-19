@@ -84,11 +84,11 @@ class EarthApp
                 #animated: true
               #while i < 3
               while i < data.length
-                #globe.addData data[i][1],
-                #earth.addData data[i][1],
-                  #format: "magnitude"
-                  #name: data[i][0]
-                  #animated: true
+                globe.addData data[i][1],
+                earth.addData data[i][1],
+                  format: "magnitude"
+                  name: data[i][0]
+                  animated: true
                 i++
               #console.log("createPoints")
               #globe.createPoints()
@@ -400,6 +400,6 @@ class Stars
         # Tell the framework about our object
         @setObject3D starsGroup
 
-Stars.NVERTICES = 667;
-Stars.NMATERIALS = 8;
-Stars.NPARTICLESYSTEMS = 24;
+Stars.NVERTICES = 667
+Stars.NMATERIALS = 8
+Stars.NPARTICLESYSTEMS = 24
