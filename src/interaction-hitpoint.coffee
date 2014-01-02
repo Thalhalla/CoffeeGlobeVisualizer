@@ -19,17 +19,17 @@ class InteractionApp
         @lastY
         @mouseDown
 
-    handleMouseDown: (x.y) ->
+    handleMouseDown: (x, y) ->
         @lastX = x
         @lastY = y
         @mouseDown = true
 
-    handleMouseUp: (x.y) ->
+    handleMouseUp: (x, y) ->
         @lastX = x
         @lastY = y
         @mouseDown = false
 
-    handleMouseMove: (x.y) ->
+    handleMouseMove: (x, y) ->
         @lastX = x
         @lastY = y
         @mouseDown = false
@@ -46,9 +46,9 @@ class InteractionApp
 
         #Clamp to some boundary values
         if(@comera.position.z < InteractionApp.MIN_CAMERA_Z)
-            @comera.position.z = InteractionApp.MIN_CAMERA_Z)
+            @comera.position.z = InteractionApp.MIN_CAMERA_Z
         if(@comera.position.z > InteractionApp.MIN_CAMERA_Z)
-            @comera.position.z = InteractionApp.MIN_CAMERA_Z)
+            @comera.position.z = InteractionApp.MIN_CAMERA_Z
 
     update: ->
         TWEEN.update()
@@ -175,9 +175,9 @@ class Model
           @normalIndicator.useQuaternion = true
           @normalIndicatorMesh.visible = true
 
-    handleMouseUp: = (x, y, hitPoint, normal) ->
+    handleMouseUp: (x, y, hitPoint, normal) ->
         @hitIndicatorMesh.visible = false  if @showHitIndicator
         @normalIndicatorMesh.visible = false  if @showNormalIndicator
 
-    handleMouseMove: = (x, y) ->
+    handleMouseMove: (x, y) ->
 
