@@ -1,10 +1,22 @@
+root = global ? window
+renderer = null
+scene = null
+camera = null
+mesh = null
+
+$(document).ready ->
+    container = document.getElementById("container")
+    app = new InteractionApp()
+    app.init({ container: container })
+    app.run()
+
 class InteractionApp
     constructor: ->
         Sim.App.call(this)
     #Subclass Sim.App
     InteractionApp.prototype = new Sim.App()
 
-    init: ->
+    init: (param) ->
         Sim.App.prototype.init.call(this, param)
         light = new THREE.DirectionalLight( 0xffffff,1)
         light.position.set(0, 0, 1).normalize()
