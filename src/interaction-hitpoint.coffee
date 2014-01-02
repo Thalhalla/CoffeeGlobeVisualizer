@@ -67,6 +67,8 @@ class Model
     #Subclass Sim.App
     Model.prototype = new Sim.Object()
 
+    Model.EXPLOSION_DISTANCE = .222;
+
     init: (param) ->
         group = new THREE.Object3D
 
@@ -152,4 +154,30 @@ class Model
         .easing(TWEEN.Easing.Quadratic.EaseOut)
         .start()
         .chain(fadetween)
+
+    handleMouseOver: (x, y) ->
+        @mesh.material.ambient.setRGB(.2,.2,.2)
+
+    handleMouseOut: (x, y) ->
+        @mesh.material.ambient.setRGB(0,0,0)
+
+    handleMouseDown: (x, y, hitPoint, normal) ->
+        if @showHitIndicator
+          @hitIndicator.position.copy hitPoint
+          @hitIndicatorMesh.visible = true
+        if @showExplosion
+          @explosion.position.copy hitPoint
+          @explosionMesh.visible = true
+          @animateExplosion normal
+        if @showNormalIndicator
+          quaternion = Sim.Utils.orientationToQuaternion(normal)
+          @normalIndicator.quaternion.copy quaternion
+          @normalIndicator.useQuaternion = true
+          @normalIndicatorMesh.visible = true
+
+    handleMouseUp: = (x, y, hitPoint, normal) ->
+        @hitIndicatorMesh.visible = false  if @showHitIndicator
+        @normalIndicatorMesh.visible = false  if @showNormalIndicator
+
+    handleMouseMove: = (x, y) ->
 
