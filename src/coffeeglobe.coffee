@@ -84,11 +84,11 @@ class EarthApp
                 #animated: true
               #while i < 3
               while i < data.length
-                #globe.addData data[i][1],
-                #earth.addData data[i][1],
-                  #format: "magnitude"
-                  #name: data[i][0]
-                  #animated: true
+                globe.addData data[i][1],
+                earth.addData data[i][1],
+                  format: "magnitude"
+                  name: data[i][0]
+                  animated: true
                 i++
               #console.log("createPoints")
               #globe.createPoints()
@@ -302,6 +302,42 @@ class Earth
         cloudMesh.rotation.x = Earth.TILT
         @object3D.add(cloudMesh)
         @cloudsMesh = cloudMesh
+
+    createHitIndicator:  ->
+        hitIndicator = new THREE.Object3D
+        rad = 0.2
+        geometry = new THREE.SphereGeometry(rad)
+        material = new THREE.MeshPhongMaterial(
+          color: 0x00ff00
+          ambient: 0xaa0000
+        )
+        mesh = new THREE.Mesh(geometry, material)
+        hitIndicator.add mesh
+        @object3D.add hitIndicator
+        @hitIndicator = hitIndicator
+        @hitIndicatorMesh = mesh
+        @hitIndicatorMesh.visible = false
+
+    createExplosion:  ->
+        explosion = new THREE.Object3D
+        rad = 0.2
+        geometry = new THREE.PlaneGeometry(1, 1, 1)
+        map = THREE.ImageUtils.loadTexture("../images/BLASTZORZ13copy.png")
+        material = new THREE.MeshPhongMaterial(
+          map: map
+          transparent: true
+        )
+        mesh = new THREE.Mesh(geometry, material)
+        explosion.add mesh
+        @object3D.add explosion
+        explosion.rotation.x = -@object3D.rotation.x
+        explosion.rotation.y = -@object3D.rotation.y
+        explosion.rotation.z = -@object3D.rotation.z
+        @explosion = explosion
+        @explosionMap = map
+        @explosionMesh = mesh
+        @explosionMesh.visible = false
+
     createTestSpike:  ->
         geometry = new THREE.CubeGeometry 0.75, 0.75, 1
         geometry.applyMatrix new THREE.Matrix4().makeTranslation(0,0,-0.5)
@@ -400,6 +436,6 @@ class Stars
         # Tell the framework about our object
         @setObject3D starsGroup
 
-Stars.NVERTICES = 667;
-Stars.NMATERIALS = 8;
-Stars.NPARTICLESYSTEMS = 24;
+Stars.NVERTICES = 667
+Stars.NMATERIALS = 8
+Stars.NPARTICLESYSTEMS = 24
