@@ -21,7 +21,7 @@ class InteractionApp
         light = new THREE.DirectionalLight( 0xffffff,1)
         light.position.set(0, 0, 1).normalize()
         @scene.add(light)
-        @carmera.position.set(0, 0, 7)
+        @camera.position.set(0, 0, 7)
         #Create the Model and add it to our sim
         model = new Model()
         model.init()
@@ -119,7 +119,6 @@ class Model
         rad = 0.2
         geometry = new THREE.PlaneGeometry(1, 1, 1)
         map = THREE.ImageUtils.loadTexture("../images/BLASTZORZ13copy.png")
-        material = new THREE
         material = new THREE.MeshPhongMaterial({map: map, transparent:true})
         mesh = new THREE.Mesh( geometry, material )
         explosion.add mesh
@@ -192,4 +191,5 @@ class Model
         @normalIndicatorMesh.visible = false  if @showNormalIndicator
 
     handleMouseMove: (x, y) ->
+        #handle mouse movement
 
