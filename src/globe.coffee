@@ -12,8 +12,6 @@ http://www.apache.org/licenses/LICENSE-2.0
 ###
 DAT = DAT or {}
 DAT.Globe = (container, colorFn) ->
-  
-  #target = { x: Math.PI*3/2, y: Math.PI / 6.0 },
   init = ->
     container.style.color = "#fff"
     container.style.font = "13px/20px Arial, sans-serif"
@@ -22,54 +20,38 @@ DAT.Globe = (container, colorFn) ->
     material = undefined
     w = container.offsetWidth or window.innerWidth
     h = container.offsetHeight or window.innerHeight
-    camera = new THREE.Camera(30, w / h, 1, 10000)
+    camera = new THREE.PerspectiveCamera(30, w / h, 1, 10000)
     camera.position.z = distance
-    vector = new THREE.Vector3()
     scene = new THREE.Scene()
-    sceneAtmosphere = new THREE.Scene()
-    geometry = new THREE.Sphere(200, 40, 30)
+    geometry = new THREE.SphereGeometry(200, 40, 30)
     shader = Shaders["earth"]
     uniforms = THREE.UniformsUtils.clone(shader.uniforms)
-    uniforms["texture"].texture = THREE.ImageUtils.loadTexture(imgDir + "world" + ".jpg")
-    material = new THREE.MeshShaderMaterial(
+    uniforms["texture"].value = THREE.ImageUtils.loadTexture(imgDir + "world.jpg")
+    material = new THREE.ShaderMaterial(
       uniforms: uniforms
       vertexShader: shader.vertexShader
       fragmentShader: shader.fragmentShader
     )
     mesh = new THREE.Mesh(geometry, material)
-    mesh.matrixAutoUpdate = false
-    scene.addObject mesh
+    mesh.rotation.y = Math.PI
+    scene.add mesh
     shader = Shaders["atmosphere"]
     uniforms = THREE.UniformsUtils.clone(shader.uniforms)
-    material = new THREE.MeshShaderMaterial(
+    material = new THREE.ShaderMaterial(
       uniforms: uniforms
       vertexShader: shader.vertexShader
       fragmentShader: shader.fragmentShader
+      side: THREE.BackSide
+      blending: THREE.AdditiveBlending
+      transparent: true
     )
     mesh = new THREE.Mesh(geometry, material)
-    mesh.scale.x = mesh.scale.y = mesh.scale.z = 1.1
-    mesh.flipSided = true
-    mesh.matrixAutoUpdate = false
-    mesh.updateMatrix()
-    sceneAtmosphere.addObject mesh
-    geometry = new THREE.Cube(0.06, 0.06, 1, 1, 1, 1, null, false,
-      px: true
-      nx: true
-      py: true
-      ny: true
-      pz: false
-      nz: true
-    )
-    i = 0
-
-    while i < geometry.vertices.length
-      vertex = geometry.vertices[i]
-      vertex.position.z += 0.5
-      i++
+    mesh.scale.set 1.1, 1.1, 1.1
+    scene.add mesh
+    geometry = new THREE.CubeGeometry(0.75, 0.75, 1)
+    geometry.applyMatrix new THREE.Matrix4().makeTranslation(0, 0, -0.5)
     point = new THREE.Mesh(geometry)
     renderer = new THREE.WebGLRenderer(antialias: true)
-    renderer.autoClear = false
-    renderer.setClearColorHex 0x000000, 0.0
     renderer.setSize w, h
     renderer.domElement.style.position = "absolute"
     container.appendChild renderer.domElement
@@ -86,8 +68,6 @@ DAT.Globe = (container, colorFn) ->
   # other option is 'legend'
   
   #        size = data[i + 2];
-  
-  #size = size*200;
   createPoints = ->
     if @_baseGeometry isnt `undefined`
       if @is_animated is false
@@ -114,9 +94,8 @@ DAT.Globe = (container, colorFn) ->
           color: 0xffffff
           vertexColors: THREE.FaceColors
           morphTargets: true
-          name: "points"
         ))
-      scene.addObject @points
+      scene.add @points
   addPoint = (lat, lng, size, color, subgeo) ->
     phi = (90 - lat) * Math.PI / 180
     theta = (180 - lng) * Math.PI / 180
@@ -124,14 +103,14 @@ DAT.Globe = (container, colorFn) ->
     point.position.y = 200 * Math.cos(phi)
     point.position.z = 200 * Math.sin(phi) * Math.sin(theta)
     point.lookAt mesh.position
-    point.scale.z = -size
+    point.scale.z = Math.max(size, 0.1) # avoid non-invertible matrix
     point.updateMatrix()
-    i = undefined
     i = 0
+
     while i < point.geometry.faces.length
       point.geometry.faces[i].color = color
       i++
-    GeometryUtils.merge subgeo, point
+    THREE.GeometryUtils.merge subgeo, point
   onMouseDown = (event) ->
     event.preventDefault()
     container.addEventListener "mousemove", onMouseMove, false
@@ -142,6 +121,18 @@ DAT.Globe = (container, colorFn) ->
     targetOnDown.x = target.x
     targetOnDown.y = target.y
     container.style.cursor = "move"
+    
+    #testing intersection code
+    vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5)
+    projector.unprojectVector vector, camera
+    raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize())
+    intersects = raycaster.intersectObjects(objects)
+    if intersects.length > 0
+      intersects[0].object.material.color.setHex Math.random() * 0xffffff
+      particle = new THREE.Sprite(particleMaterial)
+      particle.position = intersects[0].point
+      particle.scale.x = particle.scale.y = 8
+      scene.add particle
   onMouseMove = (event) ->
     mouse.x = -event.clientX
     mouse.y = event.clientY
@@ -172,52 +163,29 @@ DAT.Globe = (container, colorFn) ->
         zoom -100
         event.preventDefault()
   onWindowResize = (event) ->
-    console.log "resize"
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize window.innerWidth, window.innerHeight
   zoom = (delta) ->
     distanceTarget -= delta
     distanceTarget = (if distanceTarget > 1000 then 1000 else distanceTarget)
-    distanceTarget = (if distanceTarget < 200 then 200 else distanceTarget)
+    distanceTarget = (if distanceTarget < 350 then 350 else distanceTarget)
   animate = ->
     requestAnimationFrame animate
     render()
   render = ->
     zoom curZoomSpeed
-    rotation.x += (target.x - rotation.x) * 0.05
-    rotation.y += (target.y - rotation.y) * 0.05
-    distance += (distanceTarget - distance) * 0.1
+    rotation.x += (target.x - rotation.x) * 0.1
+    rotation.y += (target.y - rotation.y) * 0.1
+    distance += (distanceTarget - distance) * 0.3
     camera.position.x = distance * Math.sin(rotation.x) * Math.cos(rotation.y)
     camera.position.y = distance * Math.sin(rotation.y)
     camera.position.z = distance * Math.cos(rotation.x) * Math.cos(rotation.y)
-    camera.target.position.x += (3000 - camera.target.position.x) * 0.005
-    vector.copy camera.position
-    renderer.clear()
+    camera.lookAt mesh.position
     renderer.render scene, camera
-    renderer.render sceneAtmosphere, camera
-  
-  #workaround for three.js bug
-  removeObject = (scene, object) ->
-    o = undefined
-    ol = undefined
-    zobject = undefined
-    if object instanceof THREE.Mesh
-      o = scene.__webglObjects.length - 1
-      while o >= 0
-        zobject = scene.__webglObjects[o].object
-        if object is zobject
-          scene.__webglObjects.splice o, 1
-          return
-        o--
   colorFn = colorFn or (x) ->
     c = new THREE.Color()
-    c.setHSV (0.6 - (x * 0.5)), 1.0, 1.0
-    c
-
-  colorPartidos = (x) ->
-    c = new THREE.Color()
-    c.setHex x
+    c.setHSL (0.6 - (x * 0.5)), 1.0, 0.5
     c
 
   Shaders =
@@ -225,8 +193,7 @@ DAT.Globe = (container, colorFn) ->
       uniforms:
         texture:
           type: "t"
-          value: 0
-          texture: null
+          value: null
 
       vertexShader: ["varying vec3 vNormal;", "varying vec2 vUv;", "void main() {", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "vNormal = normalize( normalMatrix * normal );", "vUv = uv;", "}"].join("\n")
       fragmentShader: ["uniform sampler2D texture;", "varying vec3 vNormal;", "varying vec2 vUv;", "void main() {", "vec3 diffuse = texture2D( texture, vUv ).xyz;", "float intensity = 1.05 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) );", "vec3 atmosphere = vec3( 1.0, 1.0, 1.0 ) * pow( intensity, 3.0 );", "gl_FragColor = vec4( diffuse + atmosphere, 1.0 );", "}"].join("\n")
@@ -238,11 +205,9 @@ DAT.Globe = (container, colorFn) ->
 
   camera = undefined
   scene = undefined
-  sceneAtmosphere = undefined
   renderer = undefined
   w = undefined
   h = undefined
-  vector = undefined
   mesh = undefined
   atmosphere = undefined
   point = undefined
@@ -263,8 +228,8 @@ DAT.Globe = (container, colorFn) ->
     y: 0
 
   target =
-    x: 4.7
-    y: 0.6
+    x: Math.PI * 3 / 2
+    y: Math.PI / 6.0
 
   targetOnDown =
     x: 0
@@ -294,10 +259,6 @@ DAT.Globe = (container, colorFn) ->
       step = 4
       colorFnWrapper = (data, i) ->
         colorFn data[i + 3]
-    else if opts.format is "partidos"
-      step = 4
-      colorFnWrapper = (data, i) ->
-        colorPartidos data[i + 3]
     else
       throw ("error: format not supported: " + opts.format)
     if opts.animated
@@ -323,6 +284,7 @@ DAT.Globe = (container, colorFn) ->
       lng = data[i + 1]
       color = colorFnWrapper(data, i)
       size = data[i + 2]
+      size = size * 200
       addPoint lat, lng, size, color, subgeo
       i += step
     if opts.animated
@@ -335,11 +297,6 @@ DAT.Globe = (container, colorFn) ->
 
   init()
   @animate = animate
-  @setTarget = (rot, distance) ->
-    target.x = rot[0]
-    target.y = rot[1]
-    distanceTarget = distance
-
   @__defineGetter__ "time", ->
     @_time or 0
 
@@ -362,14 +319,61 @@ DAT.Globe = (container, colorFn) ->
     @points.morphTargetInfluences[index] = leftover
     @_time = t
 
-  @resetData = ->
-    if @points isnt `undefined`
-      @scene.removeObject @points
-      removeObject @scene, @points
-      removeObject @scene, @points
-
   @addData = addData
   @createPoints = createPoints
   @renderer = renderer
   @scene = scene
   this
+
+unless Detector.webgl
+  Detector.addGetWebGLMessage()
+else
+  years = ["1990", "1995", "2000"]
+  container = document.getElementById("container")
+  globe = new DAT.Globe(container)
+  console.log globe
+  i = undefined
+  tweens = []
+  settime = (globe, t) ->
+    ->
+      new TWEEN.Tween(globe).to(
+        time: t / years.length
+      , 500).easing(TWEEN.Easing.Cubic.EaseOut).start()
+      y = document.getElementById("year" + years[t])
+      return  if y.getAttribute("class") is "year active"
+      yy = document.getElementsByClassName("year")
+      i = 0
+      while i < yy.length
+        yy[i].setAttribute "class", "year"
+        i++
+      y.setAttribute "class", "year active"
+
+  i = 0
+
+  while i < years.length
+    y = document.getElementById("year" + years[i])
+    y.addEventListener "mouseover", settime(globe, i), false
+    i++
+  xhr = undefined
+  TWEEN.start()
+  xhr = new XMLHttpRequest()
+  xhr.open "GET", "/globe/population909500.json", true
+  xhr.onreadystatechange = (e) ->
+    if xhr.readyState is 4
+      if xhr.status is 200
+        data = JSON.parse(xhr.responseText)
+        window.data = data
+        i = 0
+        while i < data.length
+          globe.addData data[i][1],
+            format: "magnitude"
+            name: data[i][0]
+            animated: true
+
+          i++
+        globe.createPoints()
+        settime(globe, 0)()
+        globe.animate()
+        document.body.style.backgroundImage = "none" # remove loading
+
+  xhr.send null
