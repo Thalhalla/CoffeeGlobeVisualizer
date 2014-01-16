@@ -57,10 +57,10 @@ class InteractionApp
         @camera.position.z -= dx
 
         #Clamp to some boundary values
-        if(@comera.position.z < InteractionApp.MIN_CAMERA_Z)
-            @comera.position.z = InteractionApp.MIN_CAMERA_Z
-        if(@comera.position.z > InteractionApp.MIN_CAMERA_Z)
-            @comera.position.z = InteractionApp.MIN_CAMERA_Z
+        if(@camera.position.z < InteractionApp.MIN_CAMERA_Z)
+            @camera.position.z = InteractionApp.MIN_CAMERA_Z
+        if(@camera.position.z > InteractionApp.MIN_CAMERA_Z)
+            @camera.position.z = InteractionApp.MIN_CAMERA_Z
 
     update: ->
         TWEEN.update()

@@ -98,7 +98,7 @@ class EarthApp
               document.body.style.backgroundImage = "none" # remove loading
 
         xhr.send null
-        earth.createTestSpike()
+        #earth.createTestSpike()
         #@addObject dataspikes
         #@addObject spikes
 
@@ -377,9 +377,9 @@ class Earth
         #window.fuckmeMesh = fuckmeMesh
         #window.point = point
         #@fuckmeMesh = point
-        @object3D.add(fuckmeMesh)
+        #@object3D.add(fuckmeMesh)
         #@fuckm;eMesh = fuckmeMesh
-        @object3D.add(point)
+        #@object3D.add(point)
         #@point = point
 
 
